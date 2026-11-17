@@ -1,15 +1,16 @@
 import json
+import os
 import re
 import shutil
 import subprocess
 import sys
 
 
-GUIDANCE = """RTK is available. Use it for every Claude Code shell command,
+GUIDANCE = """RTK is available. Use it for every agent shell command,
 including each stage of pipelines and command chains.
 - Prefer a dedicated RTK wrapper, such as `rtk git status` or `rtk pytest`.
   Use `rtk rewrite -- '<command>'` to find a wrapper. Exit 0 or 3 returns a candidate,
-  1 means use a general wrapper, and 2 means stop. Follow Claude Code's permission prompts.
+  1 means use a general wrapper, and 2 means stop. Follow the host's permission prompts.
 - Use `rtk test`, `rtk err`, or `rtk summary` where appropriate. For other commands or
   Bash syntax such as assignments, substitutions, and heredocs, use
   `rtk run --shell bash -c '<script>'` with a correctly single-quoted script.
@@ -96,10 +97,11 @@ def deny(reason):
     return response("PreToolUse", permissionDecision="deny", permissionDecisionReason=reason)
 
 
-def bash_denial(rtk, command):
+def bash_denial(rtk, command, cwd):
     try:
         rewrite = subprocess.run(
             [rtk, "rewrite", "--", command],
+            cwd=cwd,
             stdin=subprocess.DEVNULL,
             capture_output=True,
             encoding="utf-8",
@@ -107,18 +109,31 @@ def bash_denial(rtk, command):
             timeout=2,
             check=False,
         )
-    except (OSError, subprocess.TimeoutExpired):
-        return deny(f"RTK is required, but `rtk rewrite` could not run. {BASH_FALLBACK}")
+    except (OSError, ValueError, subprocess.TimeoutExpired):
+        return f"RTK is required, but `rtk rewrite` could not run. {BASH_FALLBACK}"
 
     candidate = rewrite.stdout.strip()
     if rewrite.returncode == 2:
         reason = "RTK denied this command. Do not retry it through another wrapper."
-        return deny(f"{reason}\n{candidate}" if candidate else reason)
+        return f"{reason}\n{candidate}" if candidate else reason
     if rewrite.returncode in (0, 1, 3):
         if rewrite.returncode != 1 and uses_rtk(candidate, BASH_TOKENS):
-            return deny(f"RTK is required. Retry the shell call with this RTK command:\n{candidate}")
-        return deny(f"RTK is required. {BASH_FALLBACK}")
-    return deny(f"RTK is required. `rtk rewrite` exited with status {rewrite.returncode}. {BASH_FALLBACK}")
+            return f"RTK is required. Retry the shell call with this RTK command:\n{candidate}"
+        return f"RTK is required. {BASH_FALLBACK}"
+    return f"RTK is required. `rtk rewrite` exited with status {rewrite.returncode}. {BASH_FALLBACK}"
+
+
+def command_denial(command, *, powershell=False, cwd=None):
+    """Return the reason to block a shell command, or leave it to the host."""
+    if not isinstance(command, str) or not command.strip() or "\x00" in command:
+        return "Use RTK requires a valid shell command string."
+
+    rtk = shutil.which("rtk")
+    if not rtk:
+        return None
+    if powershell:
+        return None if uses_rtk(command, POWERSHELL_TOKENS) else f"RTK is required. {POWERSHELL_FALLBACK}"
+    return None if uses_rtk(command, BASH_TOKENS) else bash_denial(os.path.abspath(rtk), command, cwd)
 
 
 def handle(payload):
@@ -136,18 +151,8 @@ def handle(payload):
         return deny("Use RTK requires a valid shell tool input.")
     if tool == "Monitor" and "command" not in tool_input and "ws" in tool_input:
         return {}
-    command = tool_input.get("command")
-    if not isinstance(command, str) or not command.strip() or "\x00" in command:
-        return deny("Use RTK requires a valid shell command string.")
-
-    rtk = shutil.which("rtk")
-    if not rtk:
-        return {}
-    if tool == "PowerShell":
-        return {} if uses_rtk(command, POWERSHELL_TOKENS) else deny(
-            f"RTK is required. {POWERSHELL_FALLBACK}"
-        )
-    return {} if uses_rtk(command, BASH_TOKENS) else bash_denial(rtk, command)
+    reason = command_denial(tool_input.get("command"), powershell=tool == "PowerShell")
+    return deny(reason) if reason else {}
 
 
 if __name__ == "__main__":

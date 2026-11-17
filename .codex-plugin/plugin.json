@@ -1,0 +1,9 @@
+{
+  "name": "use-rtk",
+  "version": "0.1.0",
+  "description": "Require RTK for Codex shell calls when RTK is available.",
+  "author": { "name": "Roger Vilà", "url": "https://github.com/rogervila" },
+  "repository": "https://github.com/rogervila/use-rtk-plugin",
+  "license": "MIT",
+  "hooks": "./hooks/codex.json"
+}

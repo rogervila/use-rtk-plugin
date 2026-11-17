@@ -1,0 +1,15 @@
+{
+  "use-rtk": {
+    "SessionStart": [
+      { "type": "command", "command": "python3 -B ./hooks/host.py antigravity startup", "timeout": 5 }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "^run_command$",
+        "hooks": [
+          { "type": "command", "command": "python3 -B ./hooks/host.py antigravity shell", "timeout": 5 }
+        ]
+      }
+    ]
+  }
+}

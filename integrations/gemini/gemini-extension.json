@@ -1,0 +1,5 @@
+{
+  "name": "use-rtk",
+  "version": "0.1.0",
+  "description": "Require RTK for Gemini CLI shell calls when RTK is available."
+}

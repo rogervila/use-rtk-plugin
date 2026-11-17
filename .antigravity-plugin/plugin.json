@@ -1,0 +1,10 @@
+{
+  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
+  "name": "use-rtk",
+  "displayName": "Use RTK",
+  "version": "0.1.0",
+  "description": "Require RTK for Antigravity shell calls when RTK is available.",
+  "author": { "name": "Roger Vilà", "url": "https://github.com/rogervila" },
+  "repository": "https://github.com/rogervila/use-rtk-plugin",
+  "license": "MIT"
+}

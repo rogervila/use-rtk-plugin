@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      { "command": "python3 -B ./hooks/host.py cursor startup", "timeout": 5 }
+    ],
+    "beforeShellExecution": [
+      { "command": "python3 -B ./hooks/host.py cursor shell", "timeout": 5, "failClosed": true }
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -B \"$PLUGIN_ROOT/hooks/host.py\" codex startup",
+            "command_windows": "python3 -B \"$env:PLUGIN_ROOT/hooks/host.py\" codex startup",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "^Bash$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -B \"$PLUGIN_ROOT/hooks/host.py\" codex shell",
+            "command_windows": "python3 -B \"$env:PLUGIN_ROOT/hooks/host.py\" codex shell",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -B \"${extensionPath}/hooks/host.py\" gemini startup",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
+    "BeforeTool": [
+      {
+        "matcher": "^run_shell_command$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -B \"${extensionPath}/hooks/host.py\" gemini shell",
+            "timeout": 5000
+          }
+        ]
+      }
+    ]
+  }
+}

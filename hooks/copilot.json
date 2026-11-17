@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "type": "command",
+        "exec": "python3",
+        "args": ["-B", "${PLUGIN_ROOT}/hooks/host.py", "copilot", "startup"],
+        "timeoutSec": 5
+      }
+    ],
+    "subagentStart": [
+      {
+        "type": "command",
+        "exec": "python3",
+        "args": ["-B", "${PLUGIN_ROOT}/hooks/host.py", "copilot", "startup"],
+        "timeoutSec": 5
+      }
+    ],
+    "preToolUse": [
+      {
+        "type": "command",
+        "exec": "python3",
+        "args": ["-B", "${PLUGIN_ROOT}/hooks/host.py", "copilot", "shell"],
+        "matcher": "^(bash|powershell)$",
+        "timeoutSec": 5
+      }
+    ]
+  }
+}

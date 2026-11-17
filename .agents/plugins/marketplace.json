@@ -1,0 +1,12 @@
+{
+  "name": "use-rtk-plugin",
+  "interface": { "displayName": "Use RTK" },
+  "plugins": [
+    {
+      "name": "use-rtk",
+      "source": { "source": "local", "path": "./" },
+      "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" },
+      "category": "Productivity"
+    }
+  ]
+}
