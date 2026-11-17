@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "use-rtk-plugin",
+  "description": "RTK command routing for Claude Code.",
+  "owner": {
+    "name": "Roger Vilà",
+    "url": "https://github.com/rogervila"
+  },
+  "plugins": [
+    {
+      "name": "use-rtk",
+      "description": "Require RTK for Claude Code shell commands when RTK is available.",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}

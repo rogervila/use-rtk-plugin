@@ -1,0 +1,50 @@
+{
+  "name": "use-rtk",
+  "version": "0.1.0",
+  "description": "Require RTK for Claude Code shell commands when RTK is available.",
+  "author": {
+    "name": "Roger Vilà",
+    "url": "https://github.com/rogervila"
+  },
+  "repository": "https://github.com/rogervila/use-rtk-plugin",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/use_rtk.py"],
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/use_rtk.py"],
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Monitor|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/use_rtk.py"],
+            "timeout": 5,
+            "onFailure": "block"
+          }
+        ]
+      }
+    ]
+  }
+}
