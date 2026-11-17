@@ -6,21 +6,32 @@ This plugin enforces the command routing policy from the [Use RTK skill](https:/
 
 Use Claude Code 2.1.314 or later for Bash, shell-backed Monitor, and PowerShell coverage. Install Python 3.8 or later as `python3` and [RTK](https://github.com/rtk-ai/rtk) with `rewrite`, `run --shell`, and `bypass` support. RTK 1.2.0 was used for testing. Both executables must be on the `PATH` Claude Code inherits.
 
-Try the local checkout from its root:
+### Install from GitHub
 
-```sh
-claude --plugin-dir .
-```
-
-For persistent installation, run these commands inside Claude Code. Use the absolute path to the checkout, then reload plugins or start a new session.
+Run these commands inside a Claude Code session.
 
 ```text
-/plugin marketplace add /absolute/path/to/use-rtk-plugin
+/plugin marketplace add rogervila/use-rtk-plugin
 /plugin install use-rtk@use-rtk-plugin
 /reload-plugins
 ```
 
+To install from your terminal, run the commands below, then start Claude Code. In an open session, run `/reload-plugins` to load the plugin.
+
+```sh
+claude plugin marketplace add rogervila/use-rtk-plugin
+claude plugin install use-rtk@use-rtk-plugin
+```
+
 Use RTK installs its own `PreToolUse` hook through the plugin. `rtk init --global` is optional.
+
+### Try a local checkout
+
+From the checkout root, load the plugin for one session.
+
+```sh
+claude --plugin-dir .
+```
 
 ## Behavior
 
