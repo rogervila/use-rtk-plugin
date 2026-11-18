@@ -1,3 +1,4 @@
+import shlex
 import subprocess
 import unittest
 from unittest.mock import patch
@@ -107,6 +108,46 @@ class HookTests(unittest.TestCase):
         reason = self.denial(shell_call("git status | head"))
         self.assertIn("each pipeline or chain stage", reason)
         self.assertNotIn("rtk git status | head", reason)
+
+    def test_cd_stage_before_rtk_is_accepted(self):
+        for command in (
+            "cd /tmp && rtk ls -la",
+            "cd 'dir with space' && rtk git status",
+            "cd sub; rtk git log --oneline -3",
+        ):
+            with self.subTest(command=command):
+                self.assertEqual(use_rtk.handle(shell_call(command)), {})
+        self.run.assert_not_called()
+
+    def test_cd_stage_stays_literal(self):
+        for command in (
+            "cd /tmp",
+            "cd $(printf /tmp) && rtk ls",
+            "cd /tmp > out && rtk ls",
+            "cd /tmp && ls",
+        ):
+            with self.subTest(command=command):
+                self.denial(shell_call(command))
+
+    def test_rewrite_candidate_with_cd_prefix_is_suggested(self):
+        self.rewrite_result(3, "cd /tmp && rtk ls -la\n")
+        reason = self.denial(shell_call("cd /tmp && ls -la"))
+        self.assertTrue(reason.endswith("\ncd /tmp && rtk ls -la"))
+
+    def test_unwrapped_commands_get_a_complete_shell_retry(self):
+        cases = (
+            (1, "", "sed -n 60,110p config/settings.php"),
+            (3, "rtk git status | head\n", "git status | head"),
+            (1, "", "grep -c '' app.log; tail -n 5 app.log"),
+        )
+        for status, stdout, command in cases:
+            with self.subTest(command=command):
+                self.rewrite_result(status, stdout)
+                reason = self.denial(shell_call(command))
+                retry = reason.rsplit("\n", 1)[1]
+                self.assertTrue(retry.startswith("rtk run --shell bash -c '"))
+                self.assertEqual(use_rtk.handle(shell_call(retry)), {})
+                self.assertEqual(shlex.split(retry), ["rtk", "run", "--shell", "bash", "-c", command])
 
     def test_rtk_denials_get_no_retry_suggestion(self):
         for detail in ("", "Blocked by pipeline rule"):

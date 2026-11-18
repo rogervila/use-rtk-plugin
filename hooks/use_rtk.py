@@ -55,11 +55,17 @@ POWERSHELL_TOKENS = re.compile(
 
 
 def uses_rtk(command, tokens):
-    """Check that every top-level invocation begins with the literal RTK executable."""
+    """Check that every top-level invocation begins with the literal RTK executable.
+
+    A `cd` stage with literal arguments and no redirection is also accepted, because
+    `rtk rewrite` keeps it in front of the wrapped command (`cd dir && rtk ls`) and
+    the builtin runs no other program.
+    """
     offset = 0
     needs_command = True
     needs_target = False
     saw_rtk = False
+    in_cd = False
 
     while offset < len(command):
         match = tokens.match(command, offset)
@@ -78,12 +84,20 @@ def uses_rtk(command, tokens):
             if needs_command and not value.endswith("\n"):
                 return False
             needs_command = True
+            in_cd = False
         elif needs_command:
-            if kind != "word" or value != "rtk":
+            if kind != "word":
                 return False
-            saw_rtk = True
+            if value == "rtk":
+                saw_rtk = True
+            elif value == "cd":
+                in_cd = True
+            else:
+                return False
             needs_command = False
         elif kind == "redirect":
+            if in_cd:
+                return False
             needs_target = True
 
     return saw_rtk and not needs_target
@@ -95,6 +109,11 @@ def response(event, **fields):
 
 def deny(reason):
     return response("PreToolUse", permissionDecision="deny", permissionDecisionReason=reason)
+
+
+def shell_retry(command):
+    """Wrap a whole Bash command in `rtk run --shell bash -c` with safe single quoting."""
+    return "rtk run --shell bash -c '" + command.replace("'", "'\\''") + "'"
 
 
 def bash_denial(rtk, command, cwd):
@@ -119,6 +138,12 @@ def bash_denial(rtk, command, cwd):
     if rewrite.returncode in (0, 1, 3):
         if rewrite.returncode != 1 and uses_rtk(candidate, BASH_TOKENS):
             return f"RTK is required. Retry the shell call with this RTK command:\n{candidate}"
+        retry = shell_retry(command)
+        if uses_rtk(retry, BASH_TOKENS):
+            return (
+                f"RTK is required. {BASH_FALLBACK} "
+                f"Or retry the whole call with this RTK command:\n{retry}"
+            )
         return f"RTK is required. {BASH_FALLBACK}"
     return f"RTK is required. `rtk rewrite` exited with status {rewrite.returncode}. {BASH_FALLBACK}"
 
